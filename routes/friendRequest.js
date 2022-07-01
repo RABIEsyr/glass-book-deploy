@@ -139,6 +139,7 @@ router.get("/get-friends", checkJwt, (req, res) => {
           name: item.name,
           id: item._id,
           image: contents,
+          status: item.online,
         };
       });
       res.json({
@@ -172,18 +173,17 @@ router.post('/remove-submitted-user', checkJwt, (req, res) => {
 })
 router.post('/request-pending', checkJwt, (req, res) => {
   let id = req.body.id
-
+  console.log('request-pending', id);
   db.userSchema.findOne({ _id: id })
     .exec((err, user) => {
+      if (user.friendRequest != null) {
       user.friendRequest.forEach(item => {
-
         if (item == req.decoded.user._id) {
           res.write('true')
-
-
         }
       })
-      res.end()
+    }
+      res.end();
     })
 
 });

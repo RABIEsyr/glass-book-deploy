@@ -9,6 +9,7 @@ const userSchema = new schema({
   password: String,
   isAdmin: { type: Boolean, default: false },
   image: { data: Buffer, contentType: String },
+  publicKey: String,
   gender: String,
   online: { type: Boolean, default: false },
   friends: [{ type: schema.Types.ObjectId, ref: "userSchema" }],
@@ -22,6 +23,7 @@ const chatSchema = new schema({
   to: { type: schema.Types.ObjectId, ref: "userSchema" },
   text: String,
   date: { type: Date, default: Date.now },
+  isRead: { type: Boolean, default: false },
 });
 
 const postSchema = new schema({

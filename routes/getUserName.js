@@ -5,7 +5,7 @@ const ObjectId = require('mongoose').Types.ObjectId;
 const db =require('../db/db');
 
 router.post('/', checkJwt, (req, res, next) => {
-    console.log('getUseerNmae', req.body.to)
+    console.log('getUserNmae', req.body.to)
     db.userSchema.findOne({_id: req.body.to})
     .exec((err, user) => {
         res.send(user)

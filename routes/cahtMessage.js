@@ -20,7 +20,7 @@ router.get('/:receiverId', checkJwt, (req, res, next) => {
             
         ]
     }).exec((err, messages) => {
-        console.log('chatMessge', messages)
+       // console.log('chatMessge', messages)
         res.json(messages)
     })
 })

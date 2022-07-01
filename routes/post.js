@@ -34,7 +34,7 @@ router.post("/new-post", checkJwt, upload.single("file"), (req, res, next) => {
       db.userSchema.update({ _id: newPost.owner }, { $push: { posts: post._id } })
         .exec()
       if (err) {
-        es.json({
+        res.json({
           success: false,
         });
       } else {
@@ -85,10 +85,9 @@ router.get('/friends-post', checkJwt, async (req, res) => {
   let fs = [];
   let posts = []
   let finalPosts = []
-
   try {
-    db.userSchema.findOne({ _id: id })
-    .exec((err, frnds) => {
+    db.userSchema.findOne({ _id: id } ,(err, frnds) => {
+      if (frnds != null ) {
       fs = frnds.friends
       posts = db.postSchema.find()
          .populate('comments')
@@ -107,10 +106,11 @@ router.get('/friends-post', checkJwt, async (req, res) => {
         })
         res.json(finalPosts.slice(index, index + 2))
       })
+    }
     })
 
   } catch (error) {
-    
+    console.log(error)
   }
   
 

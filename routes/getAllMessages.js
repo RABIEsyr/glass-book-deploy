@@ -38,4 +38,36 @@ router.get('', checkJwt, async(req, res, next) => {
     res.send(chat1)
 })
 
+router.get('/unread-message', checkJwt, (req, res, next) => {
+    db.chatSchema.find({
+        $and: [
+            {
+                to: req.decoded.user._id,
+                isRead: false
+            }
+        ]
+    }).populate('from', '_id name')
+    .exec((err, msgs) => {
+        console.log('getAllMessages unread-message', msgs)
+        res.json({
+            msgs
+        })
+    })
+})
+router.post('/read-message', checkJwt, (req, res, next) => {
+    let userId = req.decoded.user._id;
+    let receiverId = req.body.receiverId;
+    console.log("getAllMessages.js", "userId", userId, "receiverId", receiverId)
+    db.chatSchema.updateMany({
+        $and: [
+            {
+                to: userId,
+                from: receiverId
+            }
+        ],
+        
+    }, {isRead: true}, (err, res) => {
+       // console.log('getAllMessages.js read messages', res)
+    })
+})
 module.exports = router

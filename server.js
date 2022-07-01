@@ -28,6 +28,8 @@ const chatMessageRoute = require("./routes/cahtMessage");
 const getAllMessages = require("./routes/getAllMessages");
 const checkMatchId = require("./routes/checkMatchId");
 const getUSerName = require("./routes/getUserName");
+const publicKey = require('./routes/getPublicKey');
+const checkAuth = require('./routes/checkAuth');
 
 mongoose.Promise = global.Promise;
 const ConnectionUri = config.db;
@@ -58,31 +60,30 @@ db.userSchema.findOne({ email: 'samer@samer.samer' })
     }
   })
 
-app.set("socketio", app.io);
-app.io = io;
-var array_of_connection = [];
-
-app.io.use(function (socket, next) {
-  if (socket.handshake.query && socket.handshake.query.token) {
-    jwt.verify(socket.handshake.query.token, "lol", function (err, decoded) {
-      if (err) {
-        return next(new Error("Authentication error"));
-      }
-      decoded_token = decoded;
-      socket.handshake.query.decoded = decoded;
-      next();
-    });
-  } else {
-    next(new Error("Authentication error"));
-  }
-});
-
-app.io.sockets.on("connection", function (socket) {
-  console.log("connect client");
-  array_of_connection.push(socket);
-});
-
-app.set("array_of_connection", array_of_connection);
+//old begin of socket
+// app.set("socketio", app.io);
+// app.io = io;
+// var array_of_connection = [];
+// app.io.use(function (socket, next) {
+//   if (socket.handshake.query && socket.handshake.query.token) {
+//     jwt.verify(socket.handshake.query.token, "lol", function (err, decoded) {
+//       if (err) {
+//         return next(new Error("Authentication error"));
+//       }
+//       decoded_token = decoded;
+//       socket.handshake.query.decoded = decoded;
+//       next();
+//     });
+//   } else {
+//     next(new Error("Authentication error"));
+//   }
+// });
+// app.io.sockets.on("connection", function (socket) {
+//   console.log("connect client");
+//   array_of_connection.push(socket);
+// });
+// app.set("array_of_connection", array_of_connection);
+//old end of socket
 
 const message = require("./routes/chat")(io);
 
@@ -103,6 +104,8 @@ app.use("/chat-message", chatMessageRoute);
 app.use("/get-all-messages", getAllMessages);
 app.use("/check-match-id", checkMatchId);
 app.use("/get-user-name", getUSerName);
+app.use('/public-key', publicKey);
+app.use('/check-auth', checkAuth);
 
 const path = require("path");
 const expressSS = require("express");
@@ -111,6 +114,11 @@ app.use(expressSS.static(path.join(__dirname, "uploads")));
 app.use(expressSS.static(path.resolve("uploads")));
 app.use("/profile-image/", expressSS.static("./uploads"));
 app.use("/static", expressSS.static("posts"));
+
+// app.use(expressSS.static(__dirname + '/dist'));
+// app.use('*', (req, res) => {
+//   res.sendFile(path.join(__dirname + '/dist/index.html'))
+// });
 
 const port = process.env.PORT || config.port || 8000;
 http.listen(port, (err) => {
@@ -121,4 +129,4 @@ http.listen(port, (err) => {
   }
 });
 
-module.exports = app;
+//module.exports = app;
