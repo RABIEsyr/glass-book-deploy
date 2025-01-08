@@ -24,8 +24,9 @@ const chatSchema = new schema({
   text: String,
   date: { type: Date, default: Date.now },
   isRead: { type: Boolean, default: false },
+  delete: []
 });
-
+ 
 const postSchema = new schema({
   owner: { type: schema.Types.ObjectId, ref: "userSchema" },
   text: String,

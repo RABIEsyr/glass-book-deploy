@@ -68,29 +68,31 @@ router.get("/get-friend-requests", checkJwt, (req, res) => {
     .findOne({ _id: id })
     .populate("friendRequest")
     .exec((err, users) => {
-      if (users.friendRequest.length > 0) {
-        result = users.friendRequest.map((item) => {
-          const contents = fs.readFileSync(testFolder + item._id + ".PNG", {
-            encoding: "base64",
-          });
-          if (contents) {
-            db.userSchema.findOne({ _id: item }).exec((err, r) => {
-              nm = r.name;
+      if (users) {
+        if (users.friendRequest.length > 0) {
+          result = users.friendRequest.map((item) => {
+            const contents = fs.readFileSync(testFolder + item._id + ".PNG", {
+              encoding: "base64",
             });
-            if (users.friendRequest) {
-              users.friendRequest.map((u) => {
-                if (u._id == item._id) {
-                  nm = u.name;
-                }
+            if (contents) {
+              db.userSchema.findOne({ _id: item }).exec((err, r) => {
+                nm = r.name;
               });
+              if (users.friendRequest) {
+                users.friendRequest.map((u) => {
+                  if (u._id == item._id) {
+                    nm = u.name;
+                  }
+                });
+              }
+              return {
+                name: nm,
+                id: item["_id"],
+                image: contents,
+              };
             }
-            return {
-              name: nm,
-              id: item["_id"],
-              image: contents,
-            };
-          }
-        });
+          });
+        }
       }
 
       res.json({

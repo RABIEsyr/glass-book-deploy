@@ -25,5 +25,62 @@ router.get('/:receiverId', checkJwt, (req, res, next) => {
     })
 })
 
+router.post('/delete-msg', checkJwt, (req, res, next) => {
+    let userId = req.decoded.user._id
+    let msgId = req.body.id
+    // console.log('msgid": ', msgId)
+
+    db.chatSchema.findOne({ _id: msgId })
+        .exec((err, msg) => {
+              console.log('msdd',msg)
+            if (msg) {
+                if (msg.delete.length == 0) {
+                    console.log('length: ', msg)
+                    db.chatSchema
+                    .updateOne({ _id: msgId}, { $push: { delete: userId } })
+                    .exec((err, res1) => {
+                        if(res1) {
+                            res.json(
+                                {
+                                    success: true,
+                                    message: 'message delete request'
+                                }
+                            )
+                        }
+                    })
+                } else {
+                 if(msg.delete[0] == userId) {
+                    console.log('restore msg')
+                    db.chatSchema
+                    .updateOne({ _id: msgId}, { $pull: { delete: userId } })
+                    .exec((err, res2) => {
+                        if(res2) {
+                            res.json(
+                                {
+                                    success: true,
+                                    message: 'message restore'
+                                }
+                            )
+                        }
+                    })
+                 } else {
+                    db.chatSchema.findOneAndRemove({ _id: msgId }).exec((err, res3) => {
+                        if(res3) {
+                            console.log('delete successfully')
+                            res.json(
+                                {
+                                    success: true,
+                                    message: 'message confirm delete'
+                                }
+                            )
+                        }
+                    })
+                 }
+                }
+                
+            }
+            })
+
+})
 
 module.exports = router;
