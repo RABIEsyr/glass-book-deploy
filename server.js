@@ -25,12 +25,38 @@ const userRoute = require("./routes/users");
 const friendRequestRoute = require("./routes/friendRequest");
 const notificationsRoute = require("./routes/notifications");
 const commentRoute = require("./routes/comment");
-const chatMessageRoute = require("./routes/cahtMessage");
+
 const getAllMessages = require("./routes/getAllMessages");
 const checkMatchId = require("./routes/checkMatchId");
 const getUSerName = require("./routes/getUserName");
 const publicKey = require('./routes/getPublicKey');
 const checkAuth = require('./routes/checkAuth');
+
+// socket for route
+// const io2 = require('socket.io')(http);
+const onlineUsers = new Map();
+const chatMessageRoute = require("./routes/cahtMessage")(io, onlineUsers);
+
+try {
+  io.on('connection', (socket) => {
+    var userId;
+    jwt.verify(socket.handshake.query.token, "lol", function (err, decoded) {
+      if (err) return next(new Error("Authentication error"));
+      socket.decoded = decoded;
+      senderTokent = decoded;
+     userId = socket.decoded.user._id.toString();
+      onlineUsers.set(userId, socket.id); 
+      console.log('io2 connected', onlineUsers);
+    })
+      
+      socket.on('disconnect', () => {
+        onlineUsers.delete(userId); // إزالة المستخدم عند قطع الاتصال
+        console.log('io2 onnected', onlineUsers);
+    });
+  })
+} catch (error) {
+  console.log(' eroor 0099', error)
+}
 
 mongoose.Promise = global.Promise;
 const ConnectionUri = config.db;

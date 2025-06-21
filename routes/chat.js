@@ -59,6 +59,7 @@ module.exports = function (io) {
       //end online Friends
 
     socket.on("msg", function (message) {
+      console.log('new message 2025')
       let id = message.id;
       sessionMap[message._id] = socket.id;
 
@@ -79,12 +80,15 @@ module.exports = function (io) {
       newMessage.to = id;
       newMessage.text = message.msg;
       newMessage.save().then((m) => {
+        console.log('mana,', m)
         messageNew = {
           msg: message.msg,
           senderId: socket._id,
           receiverId: id,
-          msgId: m._id
+          _id: m._id,
+          delete: m.delete
         }
+        
         db.userSchema.findOne({ _id: socket._id }).exec((err, user) => {
           db.userSchema.findOne({ _id: id }).exec((err, user2) => {
             newMessageforChatList = {
@@ -114,16 +118,24 @@ module.exports = function (io) {
             }
           })
         })
-
+        
         for (let i = 0; i < array_of_connection.length; i++) {
-          if (array_of_connection[i]._id == id) {
+          if (array_of_connection[i]._id == id ) {
             // array_of_connection[i].emit("new-msg-list", newMessageforChatList)
             array_of_connection[i].emit("msg", messageNew);
-          }
+           
+          }}
+          for (let i = 0; i < array_of_connection.length; i++) {
+            if (array_of_connection[i]._id == socket._id) {
+              // array_of_connection[i].emit("new-msg-list", newMessageforChatList)
+              array_of_connection[i].emit("msg", messageNew);
+             
+            }
           // if (array_of_connection[i]._id == socket._id){
           //   array_of_connection[i].emit("new-msg-list", newMessageforChatList)
           // }
         }
+        
       });
 
 

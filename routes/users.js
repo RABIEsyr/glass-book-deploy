@@ -23,6 +23,7 @@ router.post("/search-user", checkJwt, async (req, res, next) => {
           });
         } else {
           if (users) {
+           try {
             var result = users.map((item) => {
               const contents = fs.readFileSync(testFolder + item._id + ".PNG", {
                 encoding: "base64",
@@ -30,6 +31,9 @@ router.post("/search-user", checkJwt, async (req, res, next) => {
               if (contents)
                 return { name: item["name"], id: item["_id"], image: contents };
             });
+           } catch (error) {
+            console.log('upload error 2233')
+           }
   
             res.json({
               success: true,
