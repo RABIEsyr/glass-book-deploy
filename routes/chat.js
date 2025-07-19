@@ -28,6 +28,7 @@ module.exports = function (io) {
     }
   }).on("connection", async function (socket) {
      socket._id = senderTokent.user._id;
+     socket.currentUrl = null
     let user123 = await db.userSchema.findOneAndUpdate({_id: socket._id}, {online: true});
     console.log('user123', user123);
     array_of_connection.push(socket);
@@ -51,9 +52,14 @@ module.exports = function (io) {
         //   });
         // });
        // console.log('user get-online friend', tempOnlineFriends);
-      array_of_connection.forEach((socket) => {
+
+       try {
+        array_of_connection.forEach((socket) => {
         socket.emit('online-users', user123._id);
       })
+       } catch (error) {
+        console.log('error connected')
+       }
        
          
       //end online Friends
@@ -62,7 +68,7 @@ module.exports = function (io) {
       console.log('new message 2025')
       let id = message.id;
       sessionMap[message._id] = socket.id;
-
+      let curUrl = null
       //     db.userSchema.find({isAdmin: true}, function(err, admins) {
       //       const newMessage = new db.chatSchema();
 
@@ -86,9 +92,10 @@ module.exports = function (io) {
           senderId: socket._id,
           receiverId: id,
           _id: m._id,
-          delete: m.delete
+          delete: m.delete,
+          status: 'sent'
         }
-        
+        console.log('default message ', messageNew) 
         db.userSchema.findOne({ _id: socket._id }).exec((err, user) => {
           db.userSchema.findOne({ _id: id }).exec((err, user2) => {
             newMessageforChatList = {
@@ -120,25 +127,63 @@ module.exports = function (io) {
         })
         
         for (let i = 0; i < array_of_connection.length; i++) {
-          if (array_of_connection[i]._id == id ) {
+          if (array_of_connection[i]._id == id) {
             // array_of_connection[i].emit("new-msg-list", newMessageforChatList)
-            array_of_connection[i].emit("msg", messageNew);
            
-          }}
-          for (let i = 0; i < array_of_connection.length; i++) {
-            if (array_of_connection[i]._id == socket._id) {
-              // array_of_connection[i].emit("new-msg-list", newMessageforChatList)
+            console.log('the current url: ', array_of_connection[i].currentUrl)
+
+            console.log('curll', curUrl)
+            if (array_of_connection[i].currentUrl == socket._id) {
+              db.chatSchema
+                .findOneAndUpdate({ _id: messageNew._id }, { status: 'seen' })
+                .exec((err, m) => {
+                  if (m) {
+                    messageNew = {
+                      msg: message.msg,
+                      senderId: socket._id,
+                      receiverId: id,
+                      _id: m._id,
+                      delete: m.delete,
+                      status: 'seen'
+                    }
+                   // console.log('seen result', res1)
+                    array_of_connection[i].emit("msg", messageNew);
+
+                  }
+                })
+            } else {
               array_of_connection[i].emit("msg", messageNew);
-             
             }
-          // if (array_of_connection[i]._id == socket._id){
-          //   array_of_connection[i].emit("new-msg-list", newMessageforChatList)
-          // }
+
+          }
+        }
+        for (let i = 0; i < array_of_connection.length; i++) {
+            if (array_of_connection[i]._id == socket._id) {
+
+              
+               db.chatSchema
+                .findOne({ _id: messageNew._id })
+                  .exec((err, res11) => {
+                    messageNew = {
+                      msg: message.msg,
+                      senderId: socket._id,
+                      receiverId: id,
+                      _id: m._id,
+                      delete: m.delete,
+                      status: res11.status
+                    }
+                    array_of_connection[i].emit("msg", messageNew);
+
+                 console.log('here message', messageNew)
+                  })
+              
+            }
+        
         }
         
       });
 
-
+      
     });
     socket.on("new-post", (post) => {
       db.userSchema
@@ -158,6 +203,14 @@ module.exports = function (io) {
       post.owner = 'gggggg'
       socket.emit("new-post", post);
     });
+    socket.on('current-url', (url) => {
+      console.log('current-url', url)
+       for (let i = 0; i < array_of_connection.length; i++) {
+            if (array_of_connection[i]._id == socket._id) {
+              array_of_connection[i].currentUrl = url;
+            }
+        }
+    })
     socket.on('edit-post', (post) => {
       db.postSchema.findOneAndUpdate({ _id: post.id }, { text: post.text }).exec((err, res) => {
         db.userSchema.findOne({ _id: post.owner })
@@ -398,6 +451,25 @@ module.exports = function (io) {
       });
       //end open camera for both
 
+      //end-call
+socket.on('end-call', (id) => {
+   console.log('iss', id)
+  for (let i = 0; i < array_of_connection.length; i++) {
+          if (array_of_connection[i]._id == id.to) {
+            console.log('iss2', id.to)
+            array_of_connection[i].emit('end-call',{ reason: 'user-ended' });
+          }
+        }
+         for (let i = 0; i < array_of_connection.length; i++) {
+            if (array_of_connection[i]._id == socket._id) {
+               console.log('iss3', )
+               array_of_connection[i].emit('end-call',{ reason: 'user-ended' })
+            }}
+
+        
+})
+
+      //disconnect soceket
     socket.on('disconnect',  async () => {
       socket.removeAllListeners();
        let uu = await db.userSchema.findOneAndUpdate({_id: socket._id}, {online: false});
